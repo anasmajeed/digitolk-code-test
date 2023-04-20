@@ -35,15 +35,22 @@ class BookingController extends Controller
      */
     public function index(Request $request)
     {
-        if($user_id = $request->get('user_id')) {
+        // All the rules will be added here which are to be passed to the request
+        // Adding this here for review
 
-            $response = $this->repository->getUsersJobs($user_id);
+        $validated = $request->validate([
+            'user_id' => 'int',
+            'feedback' => 'required',
+        ]);
 
-        }
-        elseif($request->__authenticatedUser->user_type == env('ADMIN_ROLE_ID') || $request->__authenticatedUser->user_type == env('SUPERADMIN_ROLE_ID'))
-        {
+        //Note: API Permission should also be validated here if not set in middleware
+
+        $userId = $request->get('user_id');
+        $response = null;
+        if ($userId)
+            $response = $this->repository->getUsersJobs($userId);
+        elseif ($request->__authenticatedUser->user_type == env('ADMIN_ROLE_ID') || $request->__authenticatedUser->user_type == env('SUPERADMIN_ROLE_ID'))
             $response = $this->repository->getAll($request);
-        }
 
         return response($response);
     }
@@ -192,8 +199,13 @@ class BookingController extends Controller
         return response($response);
     }
 
+    /**
+     * @param Request $request
+     * @return string
+     */
     public function distanceFeed(Request $request)
     {
+        // This should be moved into a repository or service if any
         $data = $request->all();
 
         if (isset($data['distance']) && $data['distance'] != "") {
